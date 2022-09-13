@@ -78,6 +78,7 @@ export function jobConfig(werft: Werft, context: any): JobConfig {
     const withContrib = "with-contrib" in buildConfig || mainBuild;
     const withPreview = "with-preview" in buildConfig && !mainBuild;
     const storage = buildConfig["storage"] || "";
+    const selfSigned = "self-signed" in buildConfig && !mainBuild;
     const withIntegrationTests = "with-integration-tests" in buildConfig && !mainBuild;
     const withUpgradeTests = "with-upgrade-tests" in buildConfig && !mainBuild;
     const fromVersion = withUpgradeTests ? buildConfig["from-version"] : "";
@@ -125,6 +126,7 @@ export function jobConfig(werft: Werft, context: any): JobConfig {
         coverageOutput,
         dontTest,
         fromVersion,
+        selfSigned,
         installEELicense,
         localAppVersion,
         mainBuild,
@@ -151,7 +153,7 @@ export function jobConfig(werft: Werft, context: any): JobConfig {
     };
 
     werft.logOutput(sliceId, JSON.stringify(jobConfig, null, 2));
-    werft.log(sliceId, "Expand to see the parsed configuration")
+    werft.log(sliceId, "Expand to see the parsed configuration");
     const globalAttributes = Object.fromEntries(
         Object.entries(jobConfig).map((kv) => {
             const [key, value] = kv;
