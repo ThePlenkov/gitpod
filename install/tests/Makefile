@@ -33,12 +33,28 @@ help: Makefile
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo
 
+upload-gcp-cluster-creds:
+	export GKE_CREDS=$$(terraform output -json gke_user_key) && \
+	echo ${GKE_CREDS} > gcp-creds
+	gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} --project=sh-automated-tests
+	gsutil cp gcp-creds gs://nightly-tests/tf-state/${TF_VAR_TEST_ID}-gcp-creds
+
+key_file ?= ${GOOGLE_APPLICATION_CREDENTIALS}
+download-gcp-cluster-creds:
+	gcloud auth activate-service-account --key-file=${key_file} --project=sh-automated-tests
+	gsutil cp gs://nightly-tests/tf-state/${TF_VAR_TEST_ID}-gcp-creds gs-creds && cat gs-creds | base64 -d > ${TF_VAR_TEST_ID}-key.json || echo "No GCP credentials"
+
+upload-aws-cluster-creds:
+
+upload-azure-cluster-creds:
+
 upload-kubeconfig-to-gcp:
 	gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} --project=sh-automated-tests
 	gsutil cp ${KUBECONFIG} gs://nightly-tests/tf-state/${TF_VAR_TEST_ID}-kubeconfig
 
+key_file ?= ${GOOGLE_APPLICATION_CREDENTIALS}
 sync-kubeconfig:
-	gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} --project=sh-automated-tests
+	gcloud auth activate-service-account --key-file=key_file --project=sh-automated-tests
 	gsutil cp gs://nightly-tests/tf-state/${TF_VAR_TEST_ID}-kubeconfig ${KUBECONFIG} || echo "No kubeconfig"
 
 ## k3s-kubeconfig: Get the kubeconfig configuration for GCP K3s
@@ -46,9 +62,13 @@ k3s-kubeconfig: sync-kubeconfig
 
 ## gcp-kubeconfig: Get the kubeconfig configuration for GCP GKE
 gcp-kubeconfig:
-	gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS} --project=sh-automated-tests
+	kubectl get secret -n sh-gcs-secret -o -o jsonpath='{.data.key}' | base64 -d > gcs-key.json || echo "No access to core-dev cluster"
+	[[ -f gcs-key.json ]] || echo ${GOOGLE_APPLICATION_CREDENTIALS} > gcs-key.json
+	$(MAKE) download-gcp-cluster-creds key_file=${key_file}
+	[[ -f ${TF_VAR_TEST_ID}-key.json ]] &&  gcloud auth activate-service-account --key-file=${TF_VAR_TEST_ID}-key.json --project=sh-automated-tests
 	export KUBECONFIG=${KUBECONFIG} && \
 	gcloud container clusters get-credentials gp-${TF_VAR_TEST_ID} --zone europe-west1-d --project sh-automated-tests || $(MAKE) sync-kubeconfig || echo "No cluster present"
+	rm -f ${TF_VAR_TEST_ID}-key.json
 
 ## azure-kubeconfig: Get the kubeconfig configuration for Azure AKS
 azure-kubeconfig:
@@ -132,6 +152,7 @@ k3s-standard-cluster: check-env-cluster-version
 	$(MAKE) get-kubeconfig && \
 	[[ -f ${KUBECONFIG} ]] || terraform apply -target=module.k3s -var kubeconfig=${KUBECONFIG} -var k3s_node_image_id=${image_id} --auto-approve && \
 	$(MAKE) upload-kubeconfig-to-gcp # we upload the file to GCP since we cannot retrieve the file against without SSHing to the master
+	$(MAKE) upload-gcp-cluster-creds
 	@echo "Done creating k3s cluster"
 
 .PHONY:
