@@ -17,11 +17,6 @@ variable "zone" {
   default     = "europe-west1-b"
 }
 
-variable "credentials" {
-  description = "Path to the JSON file storing Google service account credentials"
-  default     = ""
-}
-
 variable "name" {
   description = "Prefix name for the nodes and firewall"
   default     = "k3s"

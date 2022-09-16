@@ -26,3 +26,8 @@ output "storage" {
     service_account_key_path = var.credentials
   }, "No GCS bucket created for object storage")
 }
+
+output "dns_credentials" {
+  sensitive = true
+  value = var.domain_name == null ? "" : base64decode(google_service_account_key.dns_sa_key[0].private_key)
+}

@@ -4,17 +4,10 @@ module "certmanager" {
   kubeconfig  = var.kubeconfig
 }
 
-module "externaldns" {
-  source      = "../../modules/tools/cloud-dns-external-dns"
-  kubeconfig  = var.kubeconfig
-  credentials = var.credentials
-  project     = var.project
-}
-
 module "cluster-issuer" {
   source              = "../../modules/tools/issuer"
   kubeconfig          = var.kubeconfig
-  gcp_credentials     = var.credentials
+  gcp_credentials     = module.k3s.dns_credentials
   issuer_name         = "cloudDNS"
   cert_manager_issuer = {
     project                 = var.project

@@ -1,4 +1,8 @@
-variable credentials {}
+variable credentials {
+  # If default is null, we expect the GOOGLE_APPLICATION_CREDENTIALS is set
+  default = null
+}
+
 variable nameservers {}
 variable domain_name {}
 variable managed_dns_zone {}
