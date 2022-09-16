@@ -100,8 +100,8 @@
 /.werft/*installer-tests* @gitpod-io/engineering-self-hosted
 /.werft/jobs/build/self-hosted-* @gitpod-io/engineering-self-hosted
 
-/preview/infrastructure/harvester @gitpod-io/platform
-/workflow @gitpod-io/platform
+/dev/preview/infrastructure/harvester @gitpod-io/platform
+/dev/preview/workflow @gitpod-io/platform
 
 #
 # Automation
