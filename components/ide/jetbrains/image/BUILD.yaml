@@ -49,7 +49,7 @@ packages:
       metadata:
         helm-component: workspace.desktopIdeImages.intellijLatest
       buildArgs:
-        JETBRAINS_DOWNLOAD_QUALIFIER: intellij-latest
+        JETBRAINS_BACKEND_URL: "https://jb-shared-builds.s3.eu-central-1.amazonaws.com/IU-223.5157/ideaIU-223.5157.tar.gz"
         SUPERVISOR_IDE_CONFIG: supervisor-ide-config_intellij.json
         JETBRAINS_BACKEND_QUALIFIER: latest
       image:

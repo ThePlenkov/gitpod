@@ -9,7 +9,10 @@ set -o pipefail
 TEST_BACKEND_DIR=/workspace/ide-backend
 if [ ! -d "$TEST_BACKEND_DIR" ]; then
   mkdir -p $TEST_BACKEND_DIR
-  cp -r /ide-desktop/backend/* $TEST_BACKEND_DIR
+  wget https://jb-shared-builds.s3.eu-central-1.amazonaws.com/IU-223.5157/ideaIU-223.5157.tar.gz
+  tar -xvf ideaIU-223.5157.tar.gz
+  rm ideaIU-223.5157.tar.gz
+  mv idea-IU-223.5157/* $TEST_BACKEND_DIR
 fi
 
 TEST_PLUGINS_DIR="$TEST_BACKEND_DIR/plugins"
@@ -47,7 +50,7 @@ export IJ_HOST_SYSTEM_BASE_DIR=/workspace/.cache/JetBrains
 export CWM_HOST_STATUS_OVER_HTTP_TOKEN=gitpod
 
 # Build and move idea-cli, then overwrite environment variables initially defined by `components/ide/jetbrains/image/leeway.Dockerfile`
-IDEA_CLI_DEV_PATH=/ide-desktop/bin/idea-cli-dev
+IDEA_CLI_DEV_PATH=$TEST_BACKEND_DIR/bin/idea-cli-dev
 (cd ../cli && go build -o $IDEA_CLI_DEV_PATH)
 export EDITOR="$IDEA_CLI_DEV_PATH open"
 export VISUAL="$EDITOR"
