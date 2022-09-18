@@ -59,8 +59,12 @@ func (v version) Defaults(in interface{}) error {
 	cfg.ContainerRegistry.InCluster = pointer.Bool(true)
 	cfg.ContainerRegistry.PrivateBaseImageAllowList = []string{}
 	cfg.Workspace.Resources.Requests = corev1.ResourceList{
-		corev1.ResourceCPU:    resource.MustParse("1000m"),
-		corev1.ResourceMemory: resource.MustParse("2Gi"),
+		corev1.ResourceCPU:              resource.MustParse("1000m"),
+		corev1.ResourceMemory:           resource.MustParse("2Gi"),
+		corev1.ResourceEphemeralStorage: resource.MustParse("5Gi"),
+	}
+	cfg.Workspace.Resources.Limits = corev1.ResourceList{
+		corev1.ResourceEphemeralStorage: resource.MustParse("10Gi"),
 	}
 	cfg.Workspace.Runtime.FSShiftMethod = FSShiftFuseFS
 	cfg.Workspace.Runtime.ContainerDSocket = containerd.ContainerdSocketLocationDefault.String()
