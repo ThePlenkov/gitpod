@@ -39,7 +39,7 @@ If you want to open a real workspace in the dev build, follow these steps:
     ./gradlew runIde --args="jetbrains-gateway://connect#gitpodHost=gitpod.io&workspaceId=andreafalze-gitpodexper-4xasfqb42zr&backendPort=63342"
     ```
 
-For executing the tests and the static analysis validations, run:
+For executing the tests and the static analysis validations, run:.
 
 ```console
 ./gradlew check
