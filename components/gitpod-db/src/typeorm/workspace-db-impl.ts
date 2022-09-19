@@ -1041,11 +1041,12 @@ export abstract class AbstractTypeORMWorkspaceDBImpl implements WorkspaceDB {
         // 3 days of the last 7 days
         const queryBuilder = workspaceInstanceRepo
             .createQueryBuilder("i")
-            .innerJoinAndMapOne("i.user", DBWorkspaceInstanceUser, "u", "i.id = u.instanceId")
             .where("i.startedTime  > :since", { since: since.toISOString })
+            .innerJoinAndMapOne("i.user", DBWorkspaceInstanceUser, "u", "i.id = u.instanceId")
             .groupBy("1")
             .having("count(distinct date(i.startedTime)) >= 3");
 
+        log.info("getActiveUser: " + queryBuilder.printSql());
         return await queryBuilder.getCount();
     }
 
