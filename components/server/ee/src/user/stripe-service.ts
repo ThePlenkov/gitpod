@@ -36,18 +36,15 @@ export class StripeService {
     }
 
     async findCustomerByUserId(userId: string): Promise<Stripe.Customer | undefined> {
-        return this.findCustomerByQuery(
-            `metadata['${ATTRIBUTION_ID_METADATA_KEY}']:'${AttributionId.render({ kind: "user", userId })}'`,
-        );
+        return this.findCustomerByAttributionId(AttributionId.render({ kind: "user", userId }));
     }
 
     async findCustomerByTeamId(teamId: string): Promise<Stripe.Customer | undefined> {
-        return this.findCustomerByQuery(
-            `metadata['${ATTRIBUTION_ID_METADATA_KEY}']:'${AttributionId.render({ kind: "team", teamId })}'`,
-        );
+        return this.findCustomerByAttributionId(AttributionId.render({ kind: "team", teamId }));
     }
 
-    async findCustomerByQuery(query: string): Promise<Stripe.Customer | undefined> {
+    async findCustomerByAttributionId(attributionId: string): Promise<Stripe.Customer | undefined> {
+        const query = `metadata['${ATTRIBUTION_ID_METADATA_KEY}']:'${attributionId}'`;
         const result = await this.getStripe().customers.search({ query });
         if (result.data.length > 1) {
             throw new Error(`Found more than one Stripe customer for query '${query}'`);
@@ -56,7 +53,8 @@ export class StripeService {
     }
 
     async createCustomerForUser(user: User): Promise<Stripe.Customer> {
-        if (await this.findCustomerByUserId(user.id)) {
+        const attributionId = AttributionId.render({ kind: "user", userId: user.id });
+        if (await this.findCustomerByAttributionId(attributionId)) {
             throw new Error(`A Stripe customer already exists for user '${user.id}'`);
         }
         // Create the customer in Stripe
@@ -64,12 +62,12 @@ export class StripeService {
             email: User.getPrimaryEmail(user),
             name: User.getName(user),
             metadata: {
-                [ATTRIBUTION_ID_METADATA_KEY]: AttributionId.render({ kind: "user", userId: user.id }),
+                [ATTRIBUTION_ID_METADATA_KEY]: attributionId,
             },
         });
         // Wait for the customer to show up in Stripe search results before proceeding
         let attempts = 0;
-        while (!(await this.findCustomerByUserId(user.id))) {
+        while (!(await this.findCustomerByAttributionId(attributionId))) {
             await new Promise((resolve) => setTimeout(resolve, POLL_CREATED_CUSTOMER_INTERVAL_MS));
             if (++attempts > POLL_CREATED_CUSTOMER_MAX_ATTEMPTS) {
                 throw new Error(`Could not confirm Stripe customer creation for user '${user.id}'`);
@@ -79,7 +77,8 @@ export class StripeService {
     }
 
     async createCustomerForTeam(user: User, team: Team): Promise<Stripe.Customer> {
-        if (await this.findCustomerByTeamId(team.id)) {
+        const attributionId = AttributionId.render({ kind: "team", teamId: team.id });
+        if (await this.findCustomerByAttributionId(attributionId)) {
             throw new Error(`A Stripe customer already exists for team '${team.id}'`);
         }
         // Create the customer in Stripe
@@ -88,12 +87,12 @@ export class StripeService {
             email: User.getPrimaryEmail(user),
             name: userName ? `${userName} (${team.name})` : team.name,
             metadata: {
-                [ATTRIBUTION_ID_METADATA_KEY]: AttributionId.render({ kind: "team", teamId: team.id }),
+                [ATTRIBUTION_ID_METADATA_KEY]: attributionId,
             },
         });
         // Wait for the customer to show up in Stripe search results before proceeding
         let attempts = 0;
-        while (!(await this.findCustomerByTeamId(team.id))) {
+        while (!(await this.findCustomerByAttributionId(attributionId))) {
             await new Promise((resolve) => setTimeout(resolve, POLL_CREATED_CUSTOMER_INTERVAL_MS));
             if (++attempts > POLL_CREATED_CUSTOMER_MAX_ATTEMPTS) {
                 throw new Error(`Could not confirm Stripe customer creation for team '${team.id}'`);
